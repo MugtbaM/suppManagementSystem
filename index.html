@@ -1,0 +1,29 @@
+<html lang="En-US">
+
+<head>
+    <meta charset="utf-8">
+    <title>
+        Supplementary Management System
+    </title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <div class="input">
+        <label for="starting">Starting Date</label>
+            <input type="date" id="starting" name="starting">
+        </div>
+        <div class="input">
+            <label for="fileInput">Upload Folder</label>
+            <input type="file" id="fileInput" name="fileInput">
+        </div>
+        <div id="input"></div>
+        <input type="hidden" name="numInputs" id="numInputs" value="0">
+        <button type="button" id="butt" onclick="addInput()">Add a Common Material:</button>
+        <button type="submit">Create Supplementary Table</button>
+    </form>
+    <script src="index.js"></script>
+</body>
+
+</html>
