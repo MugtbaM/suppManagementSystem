@@ -1,11 +1,10 @@
-// jshint esversion: 6
 // Create a require module that isn't available at ES6
-
+// jshint esversion: 6
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 // Importing required Modules
-
+import simulated from "./simulated-annealing.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
@@ -17,7 +16,6 @@ const xlsx = require("xlsx");
 const multer = require("multer");
 const express = require("express");
 const bodyParser = require("body-parser");
-var simulatedAnnealing = require('simulated-annealing');
 
 // Preparing the required Packages
 
@@ -41,6 +39,10 @@ app.post("/", upload.single("fileInput"), (req, res) => {
 
         // Transforming the supp excel file into a json array
         const excelFile = req.file;
+        if (excelFile.originalname.slice(excelFile.originalname.length - 5) != '.xlsx') {
+            errorHandling();
+            return res.end();
+        }
         const workbook = xlsx.readFile(excelFile.path);
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -76,19 +78,39 @@ app.post("/", upload.single("fileInput"), (req, res) => {
             let dateName = "commonDate" + i;
             commonName.push(req.body[inputName]);
             commonDate.push(req.body[dateName]);
+            if (commonName[i - 1] == '' || commonDate[i - 1] == '') {
+                errorHandling();
+                return res.end();
+            }
         }
+        for (let i = 0; i < commonName.length; i++) {
+            for (let j = 1; j <= commonName.length - i - 1; j++) {
+                if (commonName[i] == commonName[i + j] || commonDate[i] == commonDate[i + j]) {
+                    errorHandling();
+                    return res.end();
+                }
+
+            }
+        }
+        
+
+
         const starting = req.body.starting;
         // Creating an array of the dates depending on the starting date and the number of Supp Materials    
         var noOfMaterials = initTable.length;
 
         const d1 = new Date(starting);
+        if (d1.getDay() == 4) {
+            errorHandling();
+            return res.end();
+        }
         var ndates = getDates(d1);
 
         // Creating the initial order of materials
         var commonIndex = [];
-        for (let j = 0; j < commonName.length; j++) {
-            var temp1 = initTable.indexOf(commonName[j]);
-            var temp2 = ndates.indexOf(commonDate[j]);
+        for (let i = 0; i < commonName.length; i++) {
+            var temp1 = initTable.indexOf(commonName[i]);
+            var temp2 = ndates.indexOf(commonDate[i]);
             commonIndex.push(temp2);
             swapElements(initTable, temp1, temp2);
         }
@@ -99,12 +121,10 @@ app.post("/", upload.single("fileInput"), (req, res) => {
                 let arr = Object.keys(data[i]);
                 for (let j = 2; j < arr.length - 1; j++) {
                     for (let k = 1; k <= arr.length - j - 1; k++) {
-                        let temp5 = tab.indexOf(arr[j]);
-                        let temp6 = tab.indexOf(arr[j + k]);
-                        if (Math.abs(temp5 - temp6) == 1) {
+                        let index1 = tab.indexOf(arr[j]);
+                        let index2 = tab.indexOf(arr[j + k]);
+                        if (Math.abs(index1 - index2) == 1) {
                             cost++;
-                        } else {
-                            continue;
                         }
                     }
                 }
@@ -113,15 +133,19 @@ app.post("/", upload.single("fileInput"), (req, res) => {
         }
         // Generating alternative orders for the materials randomly to be used by the algorithm.    
         function newState(t) {
-            let temp11 = randomNumber(0, initTable.length - 1);
-            let temp12 = randomNumber(0, initTable.length - 1);
-            for (let i = 0; i < commonIndex.length; i++) {
-                while ((temp11 == commonIndex[i] && temp12 == commonIndex[i]) || temp11 == commonIndex[i] || temp12 == commonIndex[i] || temp11 == temp12) {
-                    temp11 = randomNumber(0, initTable.length - 1);
-                    temp12 = randomNumber(0, initTable.length - 1);
+            let ranIndex1 = randomNumber(0, initTable.length - 1);
+            let ranIndex2 = randomNumber(0, initTable.length - 1);
+            for (let i = 0; i < commonIndex.length;) {
+                if (ranIndex1 != ranIndex2 && ranIndex1 != commonIndex[i] && ranIndex2 != commonIndex[i]) {
+                    i++;
+
+                } else {
+                    ranIndex1 = randomNumber(0, initTable.length - 1);
+                    ranIndex2 = randomNumber(0, initTable.length - 1);
+                    i = 0;
                 }
             }
-            swapElements(t, temp11, temp12);
+            t = swapElements(t, ranIndex1, ranIndex2);
             return t;
         }
         // Getting the Tempreture which resembles the decreasing rate for the algorithm.     
@@ -129,14 +153,14 @@ app.post("/", upload.single("fileInput"), (req, res) => {
             return prevTemperature - 0.001;
         }
         // Generating the final order of the materials.
-        var orderedMaterials = simulatedAnnealing({ initialState: initTable, tempMax: 100, tempMin: 0.001, newState: newState, getTemp: getTemp, getEnergy: getEnergy });
+        var orderedMaterials = simulated({ initialState: initTable, tempMax: 100, tempMin: 0.001, newState: newState, getTemp: getTemp, getEnergy: getEnergy });
         // Matching the materials with their corresponding dates and formulating the final schedule.    
         var finalTable = [];
         for (let i = 0; i < ndates.length; i++) {
             var obj = { Date: ndates[i], Material: orderedMaterials.finstate[i] };
             finalTable.push(obj);
         }
-        console.log(finalTable);
+        console.log(orderedMaterials.finstate);
         console.log(orderedMaterials.finEnergy);
         // Required Functions
         //
@@ -148,10 +172,12 @@ app.post("/", upload.single("fileInput"), (req, res) => {
             let temp = array[index1];
             array[index1] = array[index2];
             array[index2] = temp;
+            return array;
         }
         //
         function getDates(sdate) {
             const date = new Date(sdate);
+
             let dates = [];
             for (let i = 0; i < noOfMaterials; i++) {
                 if (date.getDay() != 4) {
@@ -165,6 +191,7 @@ app.post("/", upload.single("fileInput"), (req, res) => {
             }
             return dates;
         }
+
         // Transforming the formulated Schedule into an excel File and send it to the user
 
         const wroksheet = xlsx.utils.json_to_sheet(finalTable);
@@ -174,9 +201,18 @@ app.post("/", upload.single("fileInput"), (req, res) => {
         res.setHeader('Content-Disposition', 'attachment; filename=schedule.xlsx');
         res.send(excelBuff);
     } catch (error) {
-        res.sendFile(__dirname + "/error.html");
+        errorHandling();
+        return res.end();
+    }
+    function errorHandling() {
+        res.statusCode = 302;
+        res.setHeader('Location', '/empty');
     }
 
+});
+
+app.get('/empty', (req, res) => {
+    res.sendFile(__dirname + "/error.html");
 });
 
 // Initializing the server

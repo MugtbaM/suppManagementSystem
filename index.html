@@ -9,9 +9,11 @@
 </head>
 
 <body>
+    <header>Supplementary Management System</header>
+    <img src="IMG_1626.PNG" alt="logo">
     <form action="/" method="post" enctype="multipart/form-data">
         <div class="input">
-        <label for="starting">Starting Date</label>
+            <label for="starting">Starting Date:</label>
             <input type="date" id="starting" name="starting">
         </div>
         <div class="input">
@@ -20,8 +22,13 @@
         </div>
         <div id="input"></div>
         <input type="hidden" name="numInputs" id="numInputs" value="0">
-        <button type="button" id="butt" onclick="addInput()">Add a Common Material:</button>
-        <button type="submit">Create Supplementary Table</button>
+        <div class="butt">
+            <button type="button" id="butt" onclick="addInput()">Add a Common Material:</button>
+            
+        </div>
+        <div class="butt">
+            <button type="submit" id="button">Create Supplementary Table</button>
+        </div>
     </form>
     <script src="index.js"></script>
 </body>

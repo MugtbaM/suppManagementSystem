@@ -1,34 +1,42 @@
-html, body {
-    display: flex;
-    justify-content: center;
-    font-family: Roboto, Arial, sans-serif;
-    font-size: 15px;
+html, body{
+    padding: 0;
     margin: 0;
-    }
-
-form {
-    max-width: 320px;
+    background-color: rgb(140, 164, 170);
+}
+header{
+    text-align: center;
+    font-size: x-large;
+    background-color: rgb(140, 164, 170);
+    height: 30px;
+}
+img{
+    height: 3cm;
+    width: 2cm;
+    display: block;
+    margin-top: 15px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 10%;
+}
+form{
+    background-color: lightblue;
+    margin: auto;
     margin-top: 100px;
     padding-top: 20px;
-    padding-left: 60px;
-    justify-content: center;
-    display: flexbox;
-    border: 5px solid #f1f1f1;
-    }
+    padding-bottom: 40px;
+    border-radius: 10px;
+    width: 33%;
+}
 .input{
+    justify-content: space-between;
+    text-align: center;
+    margin: auto;
     margin-top: 20px;
-    margin-bottom: 20px;
-    margin-left: auto;
+    width: 50%;
 }
-#input{
+.butt{
+    text-align: center;
+    margin: auto;
     margin-top: 20px;
-    display: flexbox;
-}
-#butt{
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-#entery{
-    margin-top: 10px;
-    margin-bottom: 10px;
+    width: 50%;
 }
